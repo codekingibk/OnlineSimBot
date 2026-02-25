@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# Virtual Number bot for Telegram
+# IBUKUNS NUMBER BOT for Telegram
 # Sends random virtual numbers to user
 # Service: OnlineSim.io
-# SourceCode (https://github.com/Kourva/OnlineSimBot)
+# Rebranded by: @IBUKUNHASBIGBALLS
+# Required Group: https://t.me/+NnMKgQ-Uk5VlOWNk
 
 # Standard library imports
 import json
@@ -24,14 +25,66 @@ from src.vneng import VNEngine
 
 # Initialize the bot token
 bot: ClassVar[Any] = telebot.TeleBot(utils.get_token())
-print(f"\33[1;36m::\33[m Bot is running with ID: {bot.get_me().id}")
+print(f"\33[1;36m::\33[m IBUKUNS NUMBER BOT is running with ID: {bot.get_me().id}")
+
+# Required group link
+REQUIRED_GROUP = "https://t.me/+NnMKgQ-Uk5VlOWNk"
+GROUP_USERNAME = "@IBUKUNS_GROUP"  # Replace with actual group username if available
+
+
+def check_group_membership(user_id: int) -> bool:
+    """
+    Check if user is a member of the required group
+    
+    Parameters:
+        user_id (int): Telegram user ID
+        
+    Returns:
+        bool: True if member, False otherwise
+    """
+    try:
+        # Try to get chat member status
+        # Note: This requires the bot to be admin in the group
+        # If bot is not admin, we'll use invite link check method
+        member = bot.get_chat_member(GROUP_USERNAME, user_id)
+        return member.status in ['member', 'administrator', 'creator']
+    except:
+        # If bot can't check membership (not admin), 
+        # we'll assume they need to join and show the link
+        return False
+
+
+def group_required(func):
+    """
+    Decorator to check if user has joined the required group
+    """
+    def wrapper(message: ClassVar[Any], *args, **kwargs):
+        user_id = message.from_user.id
+        
+        # Check if user is in group
+        if not check_group_membership(user_id):
+            bot.send_chat_action(chat_id=message.chat.id, action="typing")
+            bot.reply_to(
+                message=message,
+                text=(
+                    "❌ **Access Denied!**\n\n"
+                    "You must join our group first to use this bot:\n"
+                    f"🔗 {REQUIRED_GROUP}\n\n"
+                    "After joining, please send /start again to verify.\n\n"
+                    f"📞 Owner: @IBUKUNHASBIGBALLS"
+                ),
+                parse_mode="Markdown"
+            )
+            return None
+        return func(message, *args, **kwargs)
+    return wrapper
 
 
 @bot.message_handler(commands=["start", "restart"])
 def start_command_handler(message: ClassVar[Any]) -> NoReturn:
     """
     Function to handle start commands in bot
-    Shows welcome messages to users
+    Shows welcome messages to users and checks group membership
 
     Parameters:
         message (typing.ClassVar[Any]): Incoming message object
@@ -42,6 +95,24 @@ def start_command_handler(message: ClassVar[Any]) -> NoReturn:
 
     # Fetch user's data
     user: ClassVar[Union[str, int]] = User(message.from_user)
+    user_id = message.from_user.id
+
+    # Check group membership
+    if not check_group_membership(user_id):
+        bot.send_chat_action(chat_id=message.chat.id, action="typing")
+        bot.reply_to(
+            message=message,
+            text=(
+                f"⁀➴ Hello {user.pn}\n"
+                "Welcome to **IBUKUNS NUMBER BOT**\n\n"
+                "❌ **You need to join our group first!**\n\n"
+                f"🔗 Join here: {REQUIRED_GROUP}\n\n"
+                "After joining, send /start again to verify.\n\n"
+                f"📞 Owner: @IBUKUNHASBIGBALLS"
+            ),
+            parse_mode="Markdown"
+        )
+        return
 
     # Send welcome message
     bot.send_chat_action(chat_id=message.chat.id, action="typing")
@@ -49,10 +120,14 @@ def start_command_handler(message: ClassVar[Any]) -> NoReturn:
         message=message,
         text=(
             f"⁀➴ Hello {user.pn}\n"
-            "Welcome to Virtual Number Bot\n\n"
+            "Welcome to **IBUKUNS NUMBER BOT**\n\n"
+            "✅ **Group membership verified!**\n\n"
             "Send /help to get help message\n"
-            "Send /number to get a virtual number"
-        )
+            "Send /number to get a virtual number\n\n"
+            f"📞 Owner: @IBUKUNHASBIGBALLS\n"
+            f"📢 Group: {REQUIRED_GROUP}"
+        ),
+        parse_mode="Markdown"
     )
 
 
@@ -71,13 +146,28 @@ def help_command_handler(message: ClassVar[Any]) -> NoReturn:
 
     # Fetch user's data
     user: ClassVar[Union[str, int]] = User(message.from_user)
+    user_id = message.from_user.id
+
+    # Check group membership
+    if not check_group_membership(user_id):
+        bot.send_chat_action(chat_id=message.chat.id, action="typing")
+        bot.reply_to(
+            message=message,
+            text=(
+                f"❌ **Access Denied!**\n\n"
+                f"Join our group first: {REQUIRED_GROUP}\n\n"
+                f"📞 Owner: @IBUKUNHASBIGBALLS"
+            ),
+            parse_mode="Markdown"
+        )
+        return
 
     # Send Help message
     bot.send_chat_action(chat_id=message.chat.id, action="typing")
     bot.reply_to(
         message=message,
         text=(
-           "·ᴥ· Virtual Number Bot\n\n"
+           "·ᴥ· **IBUKUNS NUMBER BOT**\n\n"
            "This bot is using api from onlinesim.io and fetches "
            "online and active number.\n"
            "All you need is sending few commands to bot and it will "
@@ -88,12 +178,16 @@ def help_command_handler(message: ClassVar[Any]) -> NoReturn:
            "last 5 messages.\n\n"
            "★ You can also check number's telegram profile using inline button "
            "(check phone number's profile)\n══════════════\n\n"
-           "This is all you need to know about this bot!"
-        )
+           "This is all you need to know about this bot!\n\n"
+           f"📞 Owner: @IBUKUNHASBIGBALLS\n"
+           f"📢 Group: {REQUIRED_GROUP}"
+        ),
+        parse_mode="Markdown"
     )
 
 
 @bot.message_handler(commands=["number"])
+@group_required
 def number_command_handler(message: ClassVar[Any]) -> NoReturn:
     """
     Function to handle number commands in bot
@@ -211,7 +305,9 @@ def number_command_handler(message: ClassVar[Any]) -> NoReturn:
                         "⁀➴ Testing active numbers:\n"
                         f"Trying {country_name} ({formatted_number})\n\n"
                         f"{flag} Here is your number: +{number[1]}\n\n"
-                        f"Last Update: {number[0]}"
+                        f"Last Update: {number[0]}\n\n"
+                        f"📞 Owner: @IBUKUNHASBIGBALLS\n"
+                        f"📢 Group: {REQUIRED_GROUP}"
                     ),
                     reply_markup=Markup
                 )
@@ -230,7 +326,9 @@ def number_command_handler(message: ClassVar[Any]) -> NoReturn:
                     "⁀➴ Fetching online countries:\n"
                     f"Got {len(countries)} countries\n\n"
                     "⁀➴ Testing active numbers:\n"
-                    f"There is no online number for now!"
+                    f"There is no online number for now!\n\n"
+                    f"📞 Owner: @IBUKUNHASBIGBALLS\n"
+                    f"📢 Group: {REQUIRED_GROUP}"
                 ),
         ) 
 
@@ -239,6 +337,7 @@ def number_command_handler(message: ClassVar[Any]) -> NoReturn:
 
 
 @bot.callback_query_handler(func=lambda x:x.data.startswith("msg"))
+@group_required
 def number_inbox_handler(call: ClassVar[Any]) -> NoReturn:
     """
     Callback query handler to handle inbox messages
@@ -288,6 +387,7 @@ def number_inbox_handler(call: ClassVar[Any]) -> NoReturn:
 
 
 @bot.callback_query_handler(func=lambda x:x.data == "new_phone_number")
+@group_required
 def new_number_handler(call):
     """
     Callback query handler to re-new number
@@ -408,7 +508,9 @@ def new_number_handler(call):
                         "⁀➴ Testing active numbers:\n"
                         f"Trying {country_name} ({formatted_number})\n\n"
                         f"{flag} Here is your number: +{number[1]}\n\n"
-                        f"Last Update: {number[0]}"
+                        f"Last Update: {number[0]}\n\n"
+                        f"📞 Owner: @IBUKUNHASBIGBALLS\n"
+                        f"📢 Group: {REQUIRED_GROUP}"
                     ),
                     reply_markup=Markup
                 )
@@ -434,7 +536,9 @@ def new_number_handler(call):
                     "⁀➴ Fetching online countries:\n"
                     f"Got {len(countries)} countries\n\n"
                     "⁀➴ Testing active numbers:\n"
-                    f"There is no online number for now!"
+                    f"There is no online number for now!\n\n"
+                    f"📞 Owner: @IBUKUNHASBIGBALLS\n"
+                    f"📢 Group: {REQUIRED_GROUP}"
                 ),
         ) 
 
@@ -442,9 +546,39 @@ def new_number_handler(call):
         return 0
 
 
+@bot.message_handler(func=lambda message: True)
+def echo_all(message: ClassVar[Any]) -> NoReturn:
+    """
+    Handle all other messages
+    """
+    user_id = message.from_user.id
+    
+    if not check_group_membership(user_id):
+        bot.reply_to(
+            message=message,
+            text=(
+                f"❌ **Access Denied!**\n\n"
+                f"Please join our group first to use this bot:\n"
+                f"🔗 {REQUIRED_GROUP}\n\n"
+                f"📞 Owner: @IBUKUNHASBIGBALLS"
+            ),
+            parse_mode="Markdown"
+        )
+    else:
+        bot.reply_to(
+            message=message,
+            text=(
+                "Please use /help to see available commands\n\n"
+                f"📢 Group: {REQUIRED_GROUP}"
+            )
+        )
+
+
 # Run the bot on polling mode
 if __name__ == '__main__':
     try:
+        print(f"\33[1;36m::\33[m Required Group: {REQUIRED_GROUP}")
+        print(f"\33[1;36m::\33[m Bot is starting... Press Ctrl+C to stop")
         bot.infinity_polling(
             skip_pending=True
         )
